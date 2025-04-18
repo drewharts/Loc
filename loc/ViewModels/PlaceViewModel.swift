@@ -24,7 +24,7 @@ class PlaceViewModel: ObservableObject, Identifiable {
 
     init(place: Place) {
         self.place = place
-        self.id = place.id.uuidString
+        self.id = place.id
     }
 
 

@@ -29,7 +29,7 @@ struct MapView: View {
                 Puck2D(bearing: .heading)
                 
                 ForEvery(profile.getAllDetailPlaces()) { place in
-                    let placeId = place.id.uuidString
+                    let placeId = place.id
                     if let annotationImage = profile.placeAnnotationImages[placeId] {
                         PointAnnotation(coordinate: CLLocationCoordinate2D(
                             latitude: place.coordinate!.latitude, longitude: place.coordinate!.longitude

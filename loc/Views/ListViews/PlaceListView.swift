@@ -18,7 +18,7 @@ struct WidePlaceView: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            if let image = places.placeImages[place.id.uuidString] {
+            if let image = places.placeImages[place.id] {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()

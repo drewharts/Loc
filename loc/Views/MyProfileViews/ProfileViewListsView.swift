@@ -118,7 +118,7 @@ struct MyProfileHorizontalListPlaces: View {
     @Environment(\.presentationMode) var presentationMode
     
     let places: [DetailPlace]
-    @State private var placeColors: [UUID: Color] = [:]
+    @State private var placeColors: [String: Color] = [:]
     
     var body: some View {
         HStack {
@@ -129,7 +129,7 @@ struct MyProfileHorizontalListPlaces: View {
                     presentationMode.wrappedValue.dismiss()
                 }) {
                     VStack(spacing: 4) {
-                        if let image = detailPlaceViewModel.placeImages[place.id.uuidString] {
+                        if let image = detailPlaceViewModel.placeImages[place.id] {
                             Image(uiImage: image)
                                 .resizable()
                                 .scaledToFill()
@@ -163,7 +163,7 @@ struct MyProfileHorizontalListPlaces: View {
                             .frame(width: 85)
                         
                         // Display restaurant type instead of city
-                        if let type = detailPlaceViewModel.placeTypes[place.id.uuidString] {
+                        if let type = detailPlaceViewModel.placeTypes[place.id] {
                             Text(type.prefix(15))
                                 .foregroundColor(.black)
                                 .font(.caption)
@@ -208,6 +208,89 @@ struct MyProfileHorizontalListPlaces: View {
     }
 }
 
+struct PlaceCardView: View {
+    let place: DetailPlace
+    let cardWidth: CGFloat
+    let cardHeight: CGFloat
+    @EnvironmentObject var detailPlaceViewModel: DetailPlaceViewModel
+    @EnvironmentObject var selectedPlaceVM: SelectedPlaceViewModel
+    @Environment(\.presentationMode) var presentationMode
+    let onRemove: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            selectedPlaceVM.selectedPlace = place
+            selectedPlaceVM.isDetailSheetPresented = true
+            presentationMode.wrappedValue.dismiss()
+        }) {
+            VStack(alignment: .leading, spacing: 0) {
+                ZStack(alignment: .bottom) {
+                    if let image = detailPlaceViewModel.placeImages[place.id] {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: cardWidth, height: cardHeight)
+                            .clipped()
+                    } else {
+                        Rectangle()
+                            .foregroundColor(.gray)
+                            .frame(width: cardWidth, height: cardHeight)
+                    }
+                    
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.black.opacity(0.0),
+                            Color.black.opacity(0.1),
+                            Color.black.opacity(0.2),
+                            Color.black.opacity(1.0)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(width: cardWidth, height: cardHeight)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(place.name)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                        
+                        if let type = detailPlaceViewModel.placeTypes[place.id] {
+                            Text(type)
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.7))
+                                .lineLimit(1)
+                        } else if let city = place.city {
+                            Text(city)
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.7))
+                                .lineLimit(1)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .frame(width: cardWidth, height: cardHeight)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.white, lineWidth: 2)
+            )
+            .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
+        }
+        .contextMenu {
+            Button(role: .destructive) {
+                onRemove()
+            } label: {
+                Label("Remove from list", systemImage: "trash")
+            }
+        }
+    }
+}
+
 struct ListPlacesPopupView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var profile: ProfileViewModel
@@ -221,120 +304,72 @@ struct ListPlacesPopupView: View {
         GridItem(.flexible(), spacing: 15)
     ]
     
-    // Reduced width to create more space between cards
-    private let cardWidth: CGFloat = UIScreen.main.bounds.width / 2 - 35 // Increased spacing from edges
-    private let cardHeight: CGFloat = 180 // Slightly reduced height
+    private let cardWidth: CGFloat = UIScreen.main.bounds.width / 2 - 35
+    private let cardHeight: CGFloat = 180
     
     var body: some View {
         VStack(spacing: 10) {
-            HStack {
-                Button(action: {
-                    showingDeleteConfirmation = true
-                }) {
-                    Image(systemName: "trash")
-                        .foregroundColor(.gray)
-                        .frame(width: 44, height: 44)
-                }
-                
-                Spacer()
-                
-                Text(list.name)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                
-                Spacer()
-                
-                // Empty view with same width as trash button for perfect centering
-                Color.clear
+            headerView
+            Spacer().frame(height: 20)
+            placesGridView
+        }
+        .cornerRadius(20)
+        .padding()
+        .alert("Delete List", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                profile.removePlaceList(placeList: list)
+                presentationMode.wrappedValue.dismiss()
+            }
+        } message: {
+            Text("Are you sure you want to delete this list? This action cannot be undone.")
+        }
+    }
+    
+    private var headerView: some View {
+        HStack {
+            Button(action: {
+                showingDeleteConfirmation = true
+            }) {
+                Image(systemName: "trash")
+                    .foregroundColor(.gray)
                     .frame(width: 44, height: 44)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 10)
             
             Spacer()
-                .frame(height: 20) // Add extra space between title and content
             
+            Text(list.name)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .center)
+            
+            Spacer()
+            
+            Color.clear
+                .frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+    }
+    
+    private var placesGridView: some View {
+        Group {
             if let placeIds = profile.placeListMBPlaces[list.id] {
                 let places = placeIds.compactMap { detailPlaceViewModel.places[$0] }
                 if !places.isEmpty {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 15) {
                             ForEach(places, id: \.id) { place in
-                                Button(action: {
-                                    selectedPlaceVM.selectedPlace = place
-                                    selectedPlaceVM.isDetailSheetPresented = true
-                                    presentationMode.wrappedValue.dismiss()
-                                }) {
-                                    VStack(alignment: .leading, spacing: 0) {
-                                        ZStack(alignment: .bottom) {
-                                            if let image = detailPlaceViewModel.placeImages[place.id.uuidString] {
-                                                Image(uiImage: image)
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: cardWidth, height: cardHeight)
-                                                    .clipped()
-                                            } else {
-                                                Rectangle()
-                                                    .foregroundColor(.gray)
-                                                    .frame(width: cardWidth, height: cardHeight)
-                                            }
-                                            
-                                            // Gradient overlay that extends from the bottom
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    Color.black.opacity(0.0),
-                                                    Color.black.opacity(0.1),
-                                                    Color.black.opacity(0.2),
-                                                    Color.black.opacity(1.0)
-                                                ]),
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            )
-                                            .frame(width: cardWidth, height: cardHeight)
-                                            
-                                            // Text overlay at the bottom
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(place.name)
-                                                    .font(.headline)
-                                                    .foregroundColor(.white)
-                                                    .lineLimit(1)
-                                                
-                                                if let type = detailPlaceViewModel.placeTypes[place.id.uuidString] {
-                                                    Text(type)
-                                                        .font(.subheadline)
-                                                        .foregroundColor(.white.opacity(0.7))
-                                                        .lineLimit(1)
-                                                } else if let city = place.city {
-                                                    Text(city)
-                                                        .font(.subheadline)
-                                                        .foregroundColor(.white.opacity(0.7))
-                                                        .lineLimit(1)
-                                                }
-                                            }
-                                            .padding(.horizontal, 12)
-                                            .padding(.bottom, 12)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                        }
-                                    }
-                                    .frame(width: cardWidth, height: cardHeight)
-                                    .background(Color.white)
-                                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 20)
-                                            .stroke(Color.white, lineWidth: 2)
-                                    )
-                                    .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
-                                }
-                                .contextMenu {
-                                    Button(role: .destructive) {
+                                PlaceCardView(
+                                    place: place,
+                                    cardWidth: cardWidth,
+                                    cardHeight: cardHeight,
+                                    onRemove: {
                                         profile.removePlaceFromList(place: place, list: list)
-                                    } label: {
-                                        Label("Remove from list", systemImage: "trash")
                                     }
-                                }
+                                )
                             }
                         }
-                        .padding(.horizontal, 20) // Increased horizontal padding
+                        .padding(.horizontal, 20)
                         .padding(.vertical, 10)
                     }
                 } else {
@@ -347,17 +382,6 @@ struct ListPlacesPopupView: View {
                     .foregroundColor(.gray)
                     .padding(.vertical, 30)
             }
-        }
-        .cornerRadius(20)
-        .padding()
-        .alert("Delete List", isPresented: $showingDeleteConfirmation) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
-                profile.removePlaceList(placeList: list)
-                presentationMode.wrappedValue.dismiss()
-            }
-        } message: {
-            Text("Are you sure you want to delete this list? This action cannot be undone.")
         }
     }
 }

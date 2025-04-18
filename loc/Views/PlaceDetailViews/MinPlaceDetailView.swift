@@ -157,7 +157,7 @@ struct MinPlaceDetailView: View {
                             )
                     }
                     
-                    ProfileCirclesView(placeId: selectedPlaceVM.selectedPlace?.id.uuidString)
+                    ProfileCirclesView(placeId: selectedPlaceVM.selectedPlace?.id)
                 }
                 .padding(.bottom, 10)
                 

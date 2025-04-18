@@ -84,7 +84,7 @@ class SelectedPlaceViewModel: ObservableObject {
     
     // Calculate restaurant type and store in dictionary
     func calculateAndStoreRestaurantType(for place: DetailPlace) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         let placeDetailVM = PlaceDetailViewModel()
         if let type = placeDetailVM.getRestaurantType(for: place) {
             restaurantTypes[placeId] = type
@@ -151,7 +151,7 @@ class SelectedPlaceViewModel: ObservableObject {
     }
     
     private func loadReviews(for place: DetailPlace) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         DispatchQueue.main.async {
             self.reviewLoadingStates[placeId] = .loading
         }
@@ -178,7 +178,7 @@ class SelectedPlaceViewModel: ObservableObject {
                 } else {
                     let fetchedReviews = reviews ?? []
                     self.placeReviews[placeId] = fetchedReviews
-                    if self.selectedPlace?.id.uuidString == placeId {
+                    if self.selectedPlace?.id == placeId {
                         self.placeRating = self.calculateAvgRating(for: placeId)
                     }
                     
@@ -219,7 +219,7 @@ class SelectedPlaceViewModel: ObservableObject {
     }
     
     private func getPlacePhotos(for place: DetailPlace) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         DispatchQueue.main.async {
             self.photoLoadingStates[placeId] = .loading
         }
@@ -324,7 +324,7 @@ class SelectedPlaceViewModel: ObservableObject {
     
     // Update the method to take userId as parameter
     func checkLikeStatuses(userId: String) {
-        guard let placeId = selectedPlace?.id.uuidString,
+        guard let placeId = selectedPlace?.id,
               let reviews = placeReviews[placeId] else { return }
         
         // Clear previous likes before checking
@@ -344,7 +344,7 @@ class SelectedPlaceViewModel: ObservableObject {
     // MARK: - Comment Methods
     
     func loadCommentsForReview(reviewId: String) {
-        guard let placeId = selectedPlace?.id.uuidString else { return }
+        guard let placeId = selectedPlace?.id else { return }
         
         DispatchQueue.main.async {
             self.commentLoadingStates[reviewId] = .loading
@@ -380,7 +380,7 @@ class SelectedPlaceViewModel: ObservableObject {
     }
     
     func addComment(reviewId: String, text: String, images: [UIImage], userId: String, userFirstName: String, userLastName: String, profilePhotoUrl: String) {
-        guard let placeId = selectedPlace?.id.uuidString else { return }
+        guard let placeId = selectedPlace?.id else { return }
         
         let commentId = UUID().uuidString
         
@@ -474,7 +474,7 @@ class SelectedPlaceViewModel: ObservableObject {
 
     // MARK: - Public Methods
     func addReview<T: ReviewProtocol>(_ review: T) {
-        guard let placeId = selectedPlace?.id.uuidString else { return }
+        guard let placeId = selectedPlace?.id else { return }
         
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -508,17 +508,17 @@ class SelectedPlaceViewModel: ObservableObject {
     
     // MARK: - Public Accessors
     var reviews: [any ReviewProtocol] {
-        guard let placeId = selectedPlace?.id.uuidString else { return [] }
+        guard let placeId = selectedPlace?.id else { return [] }
         return placeReviews[placeId] ?? []
     }
     
     var photoLoadingState: LoadingState {
-        guard let placeId = selectedPlace?.id.uuidString else { return .idle }
+        guard let placeId = selectedPlace?.id else { return .idle }
         return photoLoadingStates[placeId] ?? .idle
     }
     
     var photos: [UIImage] {
-        guard let placeId = selectedPlace?.id.uuidString else { return [] }
+        guard let placeId = selectedPlace?.id else { return [] }
         return placePhotos[placeId] ?? []
     }
     
@@ -543,7 +543,7 @@ class SelectedPlaceViewModel: ObservableObject {
     }
     
     func likeReview<T: ReviewProtocol>(_ review: T, userId: String) {
-        guard let placeId = selectedPlace?.id.uuidString else { return }
+        guard let placeId = selectedPlace?.id else { return }
         
         // Prevent liking your own review
         if review.userId == userId {

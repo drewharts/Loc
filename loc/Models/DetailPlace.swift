@@ -10,7 +10,7 @@ import FirebaseFirestore
 import MapboxSearch
 
 struct DetailPlace: Codable, Identifiable, Equatable {
-    var id: UUID = UUID()
+    var id: String
     var name: String
     var address: String?
     var city: String?
@@ -31,7 +31,7 @@ struct DetailPlace: Codable, Identifiable, Equatable {
 
     // Existing initializers unchanged
     init() {
-        self.id = UUID()
+        self.id = UUID().uuidString
         self.name = ""
         self.address = nil
         self.mapboxId = nil
@@ -70,7 +70,7 @@ struct DetailPlace: Codable, Identifiable, Equatable {
         self.X = nil
     }
     
-    init(id: UUID, name: String, address: String?, city: String?) {
+    init(id: String, name: String, address: String?, city: String?) {
         self.id = id
         self.name = name
         self.address = address
@@ -92,7 +92,7 @@ struct DetailPlace: Codable, Identifiable, Equatable {
     }
 
     init(from searchResult: SearchResult) {
-        self.id = UUID()
+        self.id = UUID().uuidString
         self.name = searchResult.name
         self.address = searchResult.address?.formattedAddress(style: .medium)
         self.city = searchResult.address?.place
@@ -120,6 +120,30 @@ struct DetailPlace: Codable, Identifiable, Equatable {
         self.serversDinner = searchResult.metadata?.servesDinner
         self.Instagram = searchResult.metadata?.instagram
         self.X = searchResult.metadata?.twitter
+    }
+
+    init(from mesaSuggestion: MesaSuggestion) {
+        self.id = mesaSuggestion.id
+        self.name = mesaSuggestion.name
+        self.address = mesaSuggestion.address
+        self.city = nil
+        self.mapboxId = nil
+        self.coordinate = GeoPoint(
+            latitude: mesaSuggestion.location.latitude,
+            longitude: mesaSuggestion.location.longitude
+        )
+        self.categories = nil
+        self.phone = nil
+        self.rating = nil
+        self.OpenHours = nil
+        self.description = nil
+        self.priceLevel = nil
+        self.reservable = nil
+        self.servesBreakfast = nil
+        self.serversLunch = nil
+        self.serversDinner = nil
+        self.Instagram = nil
+        self.X = nil
     }
 
     public static func serializeOpenHours(_ openHours: OpenHours) -> [String] {

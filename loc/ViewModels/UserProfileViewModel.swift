@@ -158,7 +158,7 @@ class UserProfileViewModel: ObservableObject {
         for place in places {
             dispatchGroup.enter()
             
-            let documentId = place.id.uuidString
+            let documentId = place.id
             
             firestoreService.fetchPlace(withId: documentId) { result in
                 switch result {
@@ -180,7 +180,7 @@ class UserProfileViewModel: ObservableObject {
     
     // Helper method to fetch images with completion handler
     private func fetchImage(for place: DetailPlace, completion: @escaping (String, UIImage?) -> Void) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         
         // Skip if image already exists in either dictionary
         if favoritePlaceImages[placeId] != nil || placeImages[placeId] != nil {

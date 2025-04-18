@@ -80,7 +80,7 @@ struct PlaceReviewsView: View {
         ScrollViewReader { scrollProxy in
             ScrollView {
                 VStack(spacing: 24) {
-                    if let placeId = selectedPlaceVM.selectedPlace?.id.uuidString {
+                    if let placeId = selectedPlaceVM.selectedPlace?.id {
                         let loadingState = selectedPlaceVM.reviewLoadingState(forPlaceId: placeId)
                         let reviews = selectedPlaceVM.reviews // Use view model's reviews
                         
@@ -867,7 +867,7 @@ struct InlineCommentsView: View {
         // Increase the limit and reload comments
         loadedCommentLimit += 5
         
-        guard let placeId = selectedPlaceVM.selectedPlace?.id.uuidString else { return }
+        guard let placeId = selectedPlaceVM.selectedPlace?.id else { return }
         selectedPlaceVM.loadMoreComments(placeId: placeId, reviewId: reviewId, limit: loadedCommentLimit)
     }
     

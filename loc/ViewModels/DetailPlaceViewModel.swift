@@ -47,7 +47,7 @@ class DetailPlaceViewModel: ObservableObject {
 
     // Calculate and store restaurant type
     private func calculateRestaurantType(for place: DetailPlace) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         if let type = placeDetailVM.getRestaurantType(for: place) {
             placeTypes[placeId] = type
         }
@@ -183,8 +183,8 @@ class DetailPlaceViewModel: ObservableObject {
                 
                 // Update local state and fetch image on main thread
                 DispatchQueue.main.async {
-                    self.places[detailPlace.id.uuidString] = detailPlace
-                    self.fetchPlaceImage(for: detailPlace.id.uuidString)
+                    self.places[detailPlace.id] = detailPlace
+                    self.fetchPlaceImage(for: detailPlace.id)
                     self.calculateRestaurantType(for: detailPlace) // Calculate restaurant type
                     completion(detailPlace)
                 }

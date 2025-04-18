@@ -32,9 +32,9 @@ class PlaceDetailViewModel: ObservableObject {
 
     func loadData(for place: DetailPlace, currentLocation: CLLocationCoordinate2D) {
         // If we already loaded this place, do nothing (optional).
-        if currentPlaceID == place.id.uuidString { return }
+        if currentPlaceID == place.id { return }
         
-        self.currentPlaceID = place.id.uuidString
+        self.currentPlaceID = place.id
         
         self.placeName = place.name ?? "Restaurant"
         self.updateTravelTime(for: place, from: currentLocation)

@@ -77,7 +77,7 @@ struct ListSelectionRowView: View {
                 Spacer()
 
                 ZStack {
-                    if profile.placeListMBPlaces[list.id]?.contains(place.id.uuidString) ?? false {
+                    if profile.placeListMBPlaces[list.id]?.contains(place.id) ?? false {
                         Circle()
                             .fill(Color.primary)
                             .frame(width: 24, height: 24)
@@ -94,7 +94,7 @@ struct ListSelectionRowView: View {
     }
 
     private func togglePlaceInList() {
-        let isAdded = profile.isPlaceInList(listId: list.id, placeId: place.id.uuidString)
+        let isAdded = profile.isPlaceInList(listId: list.id, placeId: place.id)
         if isAdded {
             profile.removePlaceFromList(listId: list.id, place: place)
         } else {

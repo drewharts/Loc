@@ -1036,10 +1036,10 @@ class FirestoreService: ObservableObject {
                 }
                 
                 // Find the place object to remove
-                if let placeToRemove = placeList.places.first(where: { $0.id.uuidString == placeId }) {
+                if let placeToRemove = placeList.places.first(where: { $0.id == placeId }) {
                     // Create a dictionary representation of the place
                     let placeDict: [String: Any] = [
-                        "id": placeToRemove.id.uuidString,
+                        "id": placeToRemove.id,
                         "name": placeToRemove.name,
                         "address": placeToRemove.address
                     ]
@@ -1143,7 +1143,7 @@ class FirestoreService: ObservableObject {
             try db.collection("users")
                 .document(userId)
                 .collection("favorites")
-                .document(place.id.uuidString)
+                .document(place.id)
                 .setData(from: place) { error in
                     if let error = error {
                         print("Error adding place to favorites: \(error.localizedDescription)")
@@ -1167,7 +1167,7 @@ class FirestoreService: ObservableObject {
         )
         
         // Prepare a reference to the mapPlaces collection. Assume we use place.id as the document ID.
-        let mapPlaceRef = db.collection("mapPlaces").document(place.id.uuidString)
+        let mapPlaceRef = db.collection("mapPlaces").document(place.id)
         
         // Attempt to get the existing document.
         mapPlaceRef.getDocument { (document, error) in
@@ -1192,7 +1192,7 @@ class FirestoreService: ObservableObject {
             } else {
                 // The place does not exist yet. Create a new MapPlace document.
                 let newMapPlace = MapPlace(
-                    placeId: place.id.uuidString,
+                    placeId: place.id,
                     name: place.name,
                     address: place.address,
                     addedBy: [userId: userInfo]
@@ -1277,7 +1277,7 @@ class FirestoreService: ObservableObject {
     }
     
     func addToAllPlaces(detailPlace: DetailPlace, completion: @escaping (Error?) -> Void) {
-        let detailPlaceId = detailPlace.id.uuidString // Convert UUID to String
+        let detailPlaceId = detailPlace.id
         let placeRef = db.collection("places").document(detailPlaceId)
         
         do {
@@ -1326,7 +1326,7 @@ class FirestoreService: ObservableObject {
     }
 
     func updatePlace(detailPlace: DetailPlace, completion: @escaping (Error?) -> Void) {
-        let placeRef = db.collection("places").document(detailPlace.id.uuidString)
+        let placeRef = db.collection("places").document(detailPlace.id)
         
         do {
             // Update the document with merge: true to only update specified fields
@@ -1334,7 +1334,7 @@ class FirestoreService: ObservableObject {
                 if let error = error {
                     print("Error updating place: \(error.localizedDescription)")
                 } else {
-                    print("Successfully updated place with ID: \(detailPlace.id.uuidString)")
+                    print("Successfully updated place with ID: \(detailPlace.id)")
                 }
                 completion(error)
             }

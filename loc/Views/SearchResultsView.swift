@@ -2,9 +2,9 @@ import SwiftUI
 import MapboxSearch
 
 struct SearchResultsView: View {
-    let placeResults: [SearchSuggestion]
+    let placeResults: [MesaSuggestion]
     let userResults: [ProfileData]
-    let onSelectPlace: (SearchSuggestion) -> Void
+    let onSelectPlace: (MesaSuggestion) -> Void
     let onSelectUser: (ProfileData) -> Void
 
     var body: some View {
@@ -21,8 +21,8 @@ struct SearchResultsView: View {
 }
 
 struct PlaceResultsView: View {
-    let placeResults: [SearchSuggestion]
-    let onSelectPlace: (SearchSuggestion) -> Void
+    let placeResults: [MesaSuggestion]
+    let onSelectPlace: (MesaSuggestion) -> Void
 
     var body: some View {
         if !placeResults.isEmpty {
@@ -42,12 +42,10 @@ struct PlaceResultsView: View {
                                 .foregroundColor(.black)
                                 .frame(maxWidth: .infinity, alignment: .center)
 
-                            if let secondaryText = prediction.address?.formattedAddress(style: .medium) {
-                                Text(secondaryText)
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                            }
+                            Text(prediction.address)
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
                         .padding()
                         .background(Color.white)

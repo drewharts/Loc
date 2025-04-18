@@ -288,11 +288,11 @@ class ProfileViewModel: ObservableObject {
         firestoreService.fetchProfileFavorites(userId: userId) { [weak self] favorites in
             guard let self = self else { completion(); return }
             DispatchQueue.main.async {
-                let favoriteIds = favorites?.map { $0.id.uuidString } ?? []
+                let favoriteIds = favorites?.map { $0.id } ?? []
                 self.userFavorites = favoriteIds
                 
                 for place in favorites ?? [] {
-                    let placeId = place.id.uuidString
+                    let placeId = place.id
                     self.detailPlaceViewModel.places[placeId] = place
                     self.detailPlaceViewModel.updatePlaceSavers(placeId: placeId, user: user)
                     // Add to our placeSaversByPlace dictionary
@@ -343,7 +343,7 @@ class ProfileViewModel: ObservableObject {
             guard let self = self else { completion(); return }
             DispatchQueue.main.async {
                 for place in places ?? [] {
-                    let placeId = place.id.uuidString
+                    let placeId = place.id
                     self.detailPlaceViewModel.places[placeId] = place
                     self.detailPlaceViewModel.updatePlaceSavers(placeId: placeId, user: friend)
                     self.updatePlaceSavers(placeId: placeId, user: friend)
@@ -457,7 +457,7 @@ class ProfileViewModel: ObservableObject {
     }
     
     func addPlaceToList(listId: UUID, place: DetailPlace) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         placeListMBPlaces[listId, default: []].append(placeId)
         
         // Update the local PlaceList model's places array
@@ -489,7 +489,7 @@ class ProfileViewModel: ObservableObject {
     }
     
     func removePlaceFromList(listId: UUID, place: DetailPlace) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         if var placeIds = placeListMBPlaces[listId] {
             placeIds.removeAll { $0 == placeId }
             placeListMBPlaces[listId] = placeIds
@@ -497,7 +497,7 @@ class ProfileViewModel: ObservableObject {
         
         // Update the local PlaceList model's places array
         if let index = userLists.firstIndex(where: { $0.id == listId }) {
-            userLists[index].places.removeAll { $0.id.uuidString == placeId }
+            userLists[index].places.removeAll { $0.id == placeId }
             objectWillChange.send() // Explicitly notify observers of the change
         }
         
@@ -514,7 +514,7 @@ class ProfileViewModel: ObservableObject {
             for list in lists {
                 self.fetchFirestorePlaces(for: list.places) { gmsPlaces in
                     for place in gmsPlaces {
-                        let placeId = place.id.uuidString
+                        let placeId = place.id
                         self.detailPlaceViewModel.places[placeId] = place
                         self.detailPlaceViewModel.updatePlaceSavers(placeId: placeId, user: friend)
                         self.detailPlaceViewModel.fetchPlaceImage(for: placeId)
@@ -538,11 +538,11 @@ class ProfileViewModel: ObservableObject {
                 for list in lists {
                     self.fetchListImage(for: list)
                     self.fetchFirestorePlaces(for: list.places) { gmsPlaces in
-                        let placeIds = gmsPlaces.map { $0.id.uuidString }
+                        let placeIds = gmsPlaces.map { $0.id }
                         self.placeListMBPlaces[list.id] = placeIds
                         if let currentUser = self.currentUser {
                             for place in gmsPlaces {
-                                let placeId = place.id.uuidString
+                                let placeId = place.id
                                 self.detailPlaceViewModel.places[placeId] = place
                                 self.detailPlaceViewModel.updatePlaceSavers(placeId: placeId, user: currentUser)
                                 // Add to our placeSaversByPlace dictionary
@@ -569,7 +569,7 @@ class ProfileViewModel: ObservableObject {
     }
     
     func removeFavoritePlace(place: DetailPlace) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         if let index = userFavorites.firstIndex(of: placeId) {
             userFavorites.remove(at: index)
             firestoreService.removeProfileFavorite(userId: userId, placeId: placeId)
@@ -582,7 +582,7 @@ class ProfileViewModel: ObservableObject {
         mapboxSearchService.selectSuggestion(suggestion) { [weak self] result in
             guard let self = self else { return }
             self.detailPlaceViewModel.searchResultToDetailPlace(place: result) { place in
-                let placeId = place.id.uuidString
+                let placeId = place.id
                 DispatchQueue.main.async {
                     self.userFavorites.append(placeId)
                     self.firestoreService.addProfileFavorite(userId: self.userId, place: place)
@@ -609,7 +609,7 @@ class ProfileViewModel: ObservableObject {
         let dispatchGroup = DispatchGroup()
 
         for place in places {
-            let placeId = place.id.uuidString
+            let placeId = place.id
             dispatchGroup.enter()
             detailPlaceViewModel.fetchPlaceDetails(placeId: placeId) { detailPlace in
                 if let detailPlace = detailPlace {
@@ -670,7 +670,7 @@ class ProfileViewModel: ObservableObject {
     
     // Placeholder function for removing a place from a list
     func removePlaceFromList(place: DetailPlace, list: PlaceList) {
-        let placeId = place.id.uuidString
+        let placeId = place.id
         
         // Remove from local data structures
         if var placeIds = placeListMBPlaces[list.id] {
@@ -680,7 +680,7 @@ class ProfileViewModel: ObservableObject {
         
         // Update the local PlaceList model's places array
         if let index = userLists.firstIndex(where: { $0.id == list.id }) {
-            userLists[index].places.removeAll { $0.id.uuidString == placeId }
+            userLists[index].places.removeAll { $0.id == placeId }
             objectWillChange.send() // Explicitly notify observers of the change
         }
         
@@ -762,7 +762,7 @@ class ProfileViewModel: ObservableObject {
             DispatchQueue.main.async {
                 if let places = places {
                     for place in places {
-                        let placeId = place.id.uuidString
+                        let placeId = place.id
                         self.detailPlaceViewModel.places[placeId] = place
                         self.detailPlaceViewModel.updatePlaceSavers(placeId: placeId, user: currentUser)
                         // Add to placeSaversByPlace dictionary
@@ -798,7 +798,7 @@ class ProfileViewModel: ObservableObject {
             DispatchQueue.main.async {
                 if let places = places {
                     for place in places {
-                        let placeId = place.id.uuidString
+                        let placeId = place.id
                         self.detailPlaceViewModel.places[placeId] = place
                         self.detailPlaceViewModel.updatePlaceSavers(placeId: placeId, user: friend)
                         // Add to placeSaversByPlace dictionary
@@ -905,7 +905,7 @@ class ProfileViewModel: ObservableObject {
                             
                             DispatchQueue.main.async {
                                 for place in places ?? [] {
-                                    let placeId = place.id.uuidString
+                                    let placeId = place.id
                                     processedPlaces.insert(placeId)
                                     // Store the place in the DetailPlaceViewModel
                                     self.detailPlaceViewModel.places[placeId] = place
@@ -933,7 +933,7 @@ class ProfileViewModel: ObservableObject {
                                 self.fetchFirestorePlaces(for: list.places) { detailPlaces in
                                     DispatchQueue.main.async {
                                         for place in detailPlaces {
-                                            let placeId = place.id.uuidString
+                                            let placeId = place.id
                                             processedPlaces.insert(placeId)
                                             // Store the place
                                             self.detailPlaceViewModel.places[placeId] = place

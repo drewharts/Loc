@@ -11,7 +11,7 @@ struct UserProfileListViewJustListsPlaces: View {
     @EnvironmentObject var selectedPlaceVM: SelectedPlaceViewModel
     @EnvironmentObject var detailPlaceViewModel: DetailPlaceViewModel
     @Environment(\.presentationMode) var presentationMode
-    @State private var placeColors: [UUID: Color] = [:]
+    @State private var placeColors: [String: Color] = [:]
 
     @ObservedObject var viewModel: UserProfileViewModel
     var places: [DetailPlace]
@@ -24,7 +24,7 @@ struct UserProfileListViewJustListsPlaces: View {
                     presentationMode.wrappedValue.dismiss()
                 }) {
                     VStack(spacing: 4) {
-                        if let image = viewModel.placeImages[place.id.uuidString ?? ""] {
+                        if let image = viewModel.placeImages[place.id ?? ""] {
                             Image(uiImage: image)
                                 .resizable()
                                 .scaledToFill()
@@ -57,7 +57,7 @@ struct UserProfileListViewJustListsPlaces: View {
                             .lineLimit(1)
                             .frame(width: 85)
                         
-                        if let type = detailPlaceViewModel.placeTypes[place.id.uuidString] {
+                        if let type = detailPlaceViewModel.placeTypes[place.id] {
                             Text(type.prefix(15))
                                 .foregroundColor(.black)
                                 .font(.caption)

@@ -7,13 +7,12 @@
 
 import SwiftUI
 import Combine
-import MapboxSearch
 import CoreLocation
 import FirebaseFirestore
 
 class SearchViewModel: ObservableObject {
     @Published var searchText = ""  // User's search input
-    @Published var searchResults: [SearchSuggestion] = []
+    @Published var searchResults: [MesaSuggestion] = []
     @Published var userResults: [ProfileData] = []
     @Published var searchError: String?
     @Published var selectedUser: ProfileData?
@@ -21,12 +20,11 @@ class SearchViewModel: ObservableObject {
     weak var selectedPlaceVM: SelectedPlaceViewModel?
 
     private let firestoreService = FirestoreService()
-    private let mapboxSearchService = MapboxSearchService()
+    private let mesaSearchService = MesaSearchService()
     
     private var cancellables = Set<AnyCancellable>()
 
     init() {
-        
         // ✅ Debounce to limit API calls while typing
         $searchText
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main) // 300ms delay
@@ -39,79 +37,34 @@ class SearchViewModel: ObservableObject {
     }
 
     func searchPlaces(query: String) {
-        mapboxSearchService.searchPlaces(
-            query: query,
-            onResultsUpdated: { [weak self] results in
-                DispatchQueue.main.async {
-                    self?.searchResults = results
-                }
-            },
-            onError: { [weak self] error in
-                DispatchQueue.main.async {
-                    self?.searchError = error
-                }
-            }
-        )
-    }
-    
-    private func searchResultToDetailPlace(place: SearchResult, completion: @escaping (DetailPlace) -> Void) {
-        // First, check if the DetailPlace exists in Firestore using mapboxId
-        firestoreService.findPlace(mapboxId: place.mapboxId!) { [weak self] existingDetailPlace, error in
-            if let error = error {
-                print("Error checking for existing place: \(error.localizedDescription)")
-                // If there's an error, proceed to create a new DetailPlace (or handle differently)
-            }
-            
-            if var existingDetailPlace = existingDetailPlace {
-                // Update the OpenHours for the existing place
-                if let openHours = place.metadata?.openHours as? OpenHours {
-                    existingDetailPlace.OpenHours = DetailPlace.serializeOpenHours(openHours)
-                    
-                    // Update the place in Firestore
-                    self?.firestoreService.updatePlace(detailPlace: existingDetailPlace) { error in
-                        if let error = error {
-                            print("Error updating place hours in Firestore: \(error.localizedDescription)")
-                        }
-                        completion(existingDetailPlace)
-                    }
-                } else {
-                    completion(existingDetailPlace)
-                }
-                return
-            }
-            
-            // If no existing place is found, create a new DetailPlace using the initializer
-            var detailPlace = DetailPlace(from: place)
-            
-            // Save the new DetailPlace to Firestore if it doesn't exist
-            self?.firestoreService.addToAllPlaces(detailPlace: detailPlace) { error in
+        mesaSearchService.searchPlaces(query: query) { [weak self] suggestions, error in
+            DispatchQueue.main.async {
                 if let error = error {
-                    print("Error saving new place to Firestore: \(error.localizedDescription)")
+                    self?.searchError = error.localizedDescription
+                    self?.searchResults = []
+                } else {
+                    self?.searchResults = suggestions
+                    self?.searchError = nil
                 }
             }
-            
-            // Return the newly created DetailPlace
-            completion(detailPlace)
         }
     }
     
-    func selectSuggestion(_ suggestion: SearchSuggestion) {
+    func selectSuggestion(_ suggestion: MesaSuggestion) {
         print("🔍 User selected suggestion: \(suggestion.id) - \(suggestion.name)")
-        mapboxSearchService.selectSuggestion(
-            suggestion,
-            onResultResolved: { [weak self] result in
-                DispatchQueue.main.async {
-                    print("✅ Resolved result: \(result.id) - \(result.name)")
-
-                    // Use the asynchronous searchResultToDetailPlace with a completion handler
-                    self?.searchResultToDetailPlace(place: result) { [weak self] detailPlace in
-                        guard let self = self else { return }
-                        self.selectedPlaceVM?.selectedPlace = detailPlace
-                        self.selectedPlaceVM?.isDetailSheetPresented = true
-                    }
+        mesaSearchService.getPlaceDetails(id: suggestion.id) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let detailPlace):
+                    print("✅ Resolved result: \(detailPlace.id) - \(detailPlace.name)")
+                    self?.selectedPlaceVM?.selectedPlace = detailPlace
+                    self?.selectedPlaceVM?.isDetailSheetPresented = true
+                case .failure(let error):
+                    print("❌ Error getting place details: \(error.localizedDescription)")
+                    self?.searchError = error.localizedDescription
                 }
             }
-        )
+        }
     }
     
     private func searchUsers(query: String) {

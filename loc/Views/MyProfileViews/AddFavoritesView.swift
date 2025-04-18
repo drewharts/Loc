@@ -117,7 +117,7 @@ struct AddFavoritesView: View {
                 if !viewModel.searchResults.isEmpty {
                     List(viewModel.searchResults, id: \.id) { prediction in
                         // Use a ZStack to layer the onTapGesture over the entire row
-                        FavoritesContentDisplay(prediction: prediction)
+                        FavoritesContentDisplay(prediction: prediction as! SearchSuggestion)
                     }
                     .listStyle(.plain)
                 }

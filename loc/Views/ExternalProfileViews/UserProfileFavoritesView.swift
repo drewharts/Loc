@@ -13,7 +13,7 @@ struct UserProfileFavoritesView: View {
     var placeImages: [String: UIImage]
     @EnvironmentObject var selectedPlaceVM: SelectedPlaceViewModel
     @Environment(\.presentationMode) var presentationMode
-    @State private var placeColors: [UUID: Color] = [:]
+    @State private var placeColors: [String: Color] = [:]
     @State private var emptyCircleColors: [Int: Color] = [:]
 
     var body: some View {
@@ -30,7 +30,7 @@ struct UserProfileFavoritesView: View {
                     ForEach(0..<4) { index in
                         if index < userFavorites.count {
                             VStack(spacing: 4) {
-                                if let image = placeImages[userFavorites[index].id.uuidString] {
+                                if let image = placeImages[userFavorites[index].id] {
                                     Image(uiImage: image)
                                         .resizable()
                                         .scaledToFill()
